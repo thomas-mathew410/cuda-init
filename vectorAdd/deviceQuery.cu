@@ -1,3 +1,5 @@
+// code from https://cvw.cac.cornell.edu/gpu/example_submit
+
 #include <stdio.h>
 
 // Print device properties
