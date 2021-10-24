@@ -7,7 +7,7 @@
 #include <assert.h>
 #define MIN 2
 #define MAX 7
-#define ITER 10000000
+#define ITER 1
 
 __global__ void setup_kernel(curandState *state){
 
@@ -19,19 +19,18 @@ __global__ void generate_kernel(curandState *my_curandstate, const unsigned int 
 
   int idx = threadIdx.x + blockDim.x*blockIdx.x;
 
-  printf("Index: %d\n", idx);
+  printf("Index: %d", idx);
 
   int count = 0;
   while (count < n){
-    float myrandf = curand_uniform(my_curandstate+idx);
+    float myrandf = curand_uniform(my_curandstate);
     myrandf *= (max_rand_int[idx] - min_rand_int[idx]+0.999999);
     myrandf += min_rand_int[idx];
     int myrand = (int)truncf(myrandf);
 
     assert(myrand <= max_rand_int[idx]);
     assert(myrand >= min_rand_int[idx]);
-    result[myrand-min_rand_int[idx]]++;
-    count++;}
+    result[idx] = myrand;}
 }
 
 int main(){
@@ -53,7 +52,7 @@ int main(){
   *h_min_rand_int = MIN;
   cudaMemcpy(d_max_rand_int, h_max_rand_int, sizeof(unsigned), cudaMemcpyHostToDevice);
   cudaMemcpy(d_min_rand_int, h_min_rand_int, sizeof(unsigned), cudaMemcpyHostToDevice);
-  generate_kernel<<<1,1>>>(d_state, ITER, d_max_rand_int, d_min_rand_int, d_result);
+  generate_kernel<<<1, (MAX-MIN+1)>>>(d_state, ITER, d_max_rand_int, d_min_rand_int, d_result);
   cudaMemcpy(h_result, d_result, (MAX-MIN+1) * sizeof(unsigned), cudaMemcpyDeviceToHost);
   printf("Bin:    Count: \n");
   for (int i = MIN; i <= MAX; i++)
