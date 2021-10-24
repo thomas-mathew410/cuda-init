@@ -24,12 +24,12 @@ __global__ void generate_kernel(curandState *my_curandstate, const unsigned int 
   int count = 0;
   while (count < n){
     float myrandf = curand_uniform(my_curandstate);
-    myrandf *= (max_rand_int[idx] - min_rand_int[idx]+0.999999);
-    myrandf += min_rand_int[idx];
+    myrandf *= (max_rand_int[0] - min_rand_int[0]+0.999999);
+    myrandf += min_rand_int[0];
     int myrand = (int)truncf(myrandf);
 
-    assert(myrand <= max_rand_int[idx]);
-    assert(myrand >= min_rand_int[idx]);
+    assert(myrand <= max_rand_int[0]);
+    assert(myrand >= min_rand_int[0]);
     result[idx] = myrand;}
 }
 
