@@ -93,8 +93,36 @@ int main()
     cudaDeviceSynchronize();
     cudaMemcpy(h_matrix_res, d_matrix_res, matrix_size, cudaMemcpyDeviceToHost);
 
-    matrix_transpose<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[1], ROW_SIZE);
+    // matrix_transpose<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[1], ROW_SIZE);
     cudaDeviceSynchronize();
+
+    int *h_matrix_res_serial;
+    h_matrix_res_serial = (int *)malloc(matrix_size * sizeof(int));
+
+    // Get transposed matrix
+    cudaMemcpy(h_matrix[1], d_matrix[1], matrix_size, cudaMemcpyDeviceToHost);
+
+    for(int k = 0; k < COLUMN_SIZE; k++)
+    {
+        for(int i = 0; i < COLUMN_SIZE; i++)
+        {
+            int cellVal = 0;
+            for(int j = 0; j < COLUMN_SIZE; j++)
+            {
+                cellVal += (h_matrix[0][k * COLUMN_SIZE + j] + h_matrix[1][i * COLUMN_SIZE + j]);
+            }
+            h_matrix_res_serial[k * COLUMN_SIZE + i] = cellVal;
+        }
+    }
+
+    for(int i = 0; i < matrix_size; i++)
+    {
+        if(h_matrix_res[i] != h_matrix_res_serial[i])
+        {
+            printf("Unequal values at row: %d column: %d", i/COLUMN_SIZE, i%COLUMN_SIZE);
+            break;
+        }
+    }
 
     for(int i=0; i < 2; i++)
     {
@@ -103,5 +131,5 @@ int main()
     }
     cudaFree(d_matrix_res);
     free(h_matrix_res);
-
+    free(h_matrix_res_serial);
 }
