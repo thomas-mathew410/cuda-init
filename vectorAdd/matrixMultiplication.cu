@@ -119,6 +119,7 @@ int main()
     for(int i=0; i < 2; i++)
     {
         display_matrix<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[i], ROW_SIZE, MIN, MAX, d_state);
+        cudaDeviceSynchronize();
     }
 
     printf("\n");
