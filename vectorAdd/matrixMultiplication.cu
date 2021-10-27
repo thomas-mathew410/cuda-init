@@ -39,6 +39,16 @@ __global__ void init_matrix(int *matrix, int dim, int min, int max, curandState 
     }
 }
 
+__global__ void display_matrix(int *matrix, int dim, int min, int max, curandState *state)
+{
+    int idx = threadIdx.x+blockDim.x*blockIdx.x;
+
+    if(idx < 4)
+    {
+        printf("%d ", matrix[idx]);
+    }
+}
+
 __global__ void matrix_transpose(int *matrix, int dim)
 {
     int idx = threadIdx.x+blockDim.x*blockIdx.x;
@@ -104,6 +114,11 @@ int main()
             // }
             printf("%d ", h_matrix[j][i]);
         }
+    }
+
+    for(int i=0; i < 2; i++)
+    {
+        display_matrix<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[i], ROW_SIZE, MIN, MAX, d_state);
     }
 
     printf("\n");
