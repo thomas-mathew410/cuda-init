@@ -7,7 +7,7 @@
 #define COLUMN_SIZE 1024
 #define BLK_SIZE 512
 #define MIN 1
-#define MAX 100
+#define MAX 15
 
 __global__ void setup_kernel(curandState *state, unsigned long long seed){
 
