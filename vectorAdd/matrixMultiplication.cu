@@ -1,6 +1,7 @@
 #include <curand.h>
 #include <curand_kernel.h>
 #include <time.h>
+#include <stdio.h>
 
 #define ROW_SIZE 1024
 #define COLUMN_SIZE 1024
