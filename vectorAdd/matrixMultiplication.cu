@@ -3,8 +3,8 @@
 #include <time.h>
 #include <stdio.h>
 
-#define ROW_SIZE 1024
-#define COLUMN_SIZE 1024
+#define ROW_SIZE 2
+#define COLUMN_SIZE 2
 #define BLK_SIZE 512
 #define MIN 1
 #define MAX 15
@@ -16,17 +16,27 @@ __global__ void setup_kernel(curandState *state, unsigned long long seed){
     curand_init(seed, idx, 0, &state[idx]);
 }
 
+// __global__ void init_matrix(int *matrix, int dim, int min, int max, curandState *state)
+// {
+//     int idx = threadIdx.x+blockDim.x*blockIdx.x;
+
+//     int row = idx / dim;
+//     float myrandf = curand_uniform(&state[row]);
+//     myrandf *= (max - min+0.999999);
+//     myrandf += min;
+//     int myrand = (int)truncf(myrandf);
+
+//     matrix[idx] = myrand;
+// }
+
 __global__ void init_matrix(int *matrix, int dim, int min, int max, curandState *state)
 {
     int idx = threadIdx.x+blockDim.x*blockIdx.x;
 
-    int row = idx / dim;
-    float myrandf = curand_uniform(&state[row]);
-    myrandf *= (max - min+0.999999);
-    myrandf += min;
-    int myrand = (int)truncf(myrandf);
-
-    matrix[idx] = myrand;
+    if(idx < 4)
+    {
+        matrix[idx] = (idx % 2 == 0) ? 2 : 0;
+    }
 }
 
 __global__ void matrix_transpose(int *matrix, int dim)
@@ -118,11 +128,24 @@ int main()
 
     for(int i = 0; i < matrix_size; i++)
     {
-        if(h_matrix_res[i] != h_matrix_res_serial[i])
-        {
-            printf("Unequal values at row: %d column: %d", i/COLUMN_SIZE, i%COLUMN_SIZE);
-            break;
-        }
+        // if(h_matrix_res[i] != h_matrix_res_serial[i])
+        // {
+        //     printf("Unequal values at row: %d column: %d", i/COLUMN_SIZE, i%COLUMN_SIZE);
+        //     break;
+        // }
+        printf("%d ", h_matrix_res[i]);
+    }
+
+    printf("\n");
+
+    for(int i = 0; i < matrix_size; i++)
+    {
+        // if(h_matrix_res[i] != h_matrix_res_serial[i])
+        // {
+        //     printf("Unequal values at row: %d column: %d", i/COLUMN_SIZE, i%COLUMN_SIZE);
+        //     break;
+        // }
+        printf("%d ", h_matrix_res_serial[i]);
     }
 
     for(int i=0; i < 2; i++)
