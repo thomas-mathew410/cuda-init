@@ -93,6 +93,19 @@ int main()
         cudaMemcpy(h_matrix[i], d_matrix[i], matrix_size, cudaMemcpyDeviceToHost);
     }
 
+    for(int j = 0; j < 2; j++)
+    {
+        for(int i = 0; i < matrix_size; i++)
+        {
+            // if(h_matrix_res[i] != h_matrix_res_serial[i])
+            // {
+            //     printf("Unequal values at row: %d column: %d", i/COLUMN_SIZE, i%COLUMN_SIZE);
+            //     break;
+            // }
+            printf("%d ", h_matrix[j][i]);
+        }
+    }
+
     matrix_transpose<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[1], ROW_SIZE);
     cudaDeviceSynchronize();
 
