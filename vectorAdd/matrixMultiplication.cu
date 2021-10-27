@@ -106,6 +106,8 @@ int main()
         }
     }
 
+    printf("\n");
+
     matrix_transpose<<<(BLK_SIZE * 4), BLK_SIZE>>> (d_matrix[1], ROW_SIZE);
     cudaDeviceSynchronize();
 
