@@ -2,10 +2,13 @@
 #include <limits>
 #include <algorithm>
 #include <iterator>
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
 
 #define BLK_SIZE 512
 
-__global__ void bfs_kerenel(int *nodes, int *edgesArr, bool *frontierArr, bool *visitedArr, int *costArr, int numNodes, int numEdges)
+__global__ void bfs_kerenel(int *nodes, int *edgesArr, bool *frontierArr, bool *visitedArr, int *costArr, bool* frontierExists, int numNodes, int numEdges)
 {
     int idx = threadIdx.x+blockDim.x*blockIdx.x;
     if (idx < numNodes)
@@ -21,6 +24,10 @@ __global__ void bfs_kerenel(int *nodes, int *edgesArr, bool *frontierArr, bool *
                 {
                     costArr[edgesArr[i]] = costArr[idx] + 1;
                     frontierArr[edgesArr[i]] = true;
+                    if(!(*frontierExists))
+                    {
+                        atomicCAS((int *)frontierExists, (int) false, (int) true);
+                    }
                 }
             }
         }
@@ -43,6 +50,7 @@ int main()
     bool h_frontierArr[numNodes] {false};
     bool h_visitedArr[numNodes] {false};
     int h_costArr[numNodes] {std::numeric_limits<int>::max()};
+    bool h_frontierExists{true};
 
     h_frontierArr[0] = true;
     h_costArr[0] = 0;
@@ -56,25 +64,30 @@ int main()
     bool *d_frontierArr;
     bool *d_visitedArr;
     int *d_costArr;
+    bool *d_frontierExists;
 
     cudaMalloc(&d_nodes, NODES_SIZE);
     cudaMalloc(&d_edgesArr, EDGES_SIZE);
     cudaMalloc(&d_frontierArr, BOOLS_SIZE);
     cudaMalloc(&d_visitedArr, BOOLS_SIZE);
     cudaMalloc(&d_costArr, NODES_SIZE);
+    cudaMalloc(&d_frontierExists, sizeof(bool));
 
     cudaMemcpy(d_nodes, h_nodes, NODES_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(d_edgesArr, h_edgesArr, EDGES_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(d_frontierArr, h_frontierArr, BOOLS_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(d_visitedArr, h_visitedArr, BOOLS_SIZE, cudaMemcpyHostToDevice);
     cudaMemcpy(d_costArr, h_costArr, EDGES_SIZE, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_frontierExists, &h_frontierExists, sizeof(bool), cudaMemcpyHostToDevice);
 
-    while(std::find(std::begin(h_frontierArr), std::end(h_frontierArr),  true) != std::end(h_frontierArr))
+    while(h_frontierExists)
     {
-        bfs_kerenel<<<1, BLK_SIZE>>>(d_nodes, d_edgesArr, d_frontierArr, d_visitedArr, d_costArr, numNodes, numEdges);
+        h_frontierExists = false;
+        cudaMemcpy(d_frontierExists, &h_frontierExists, sizeof(bool), cudaMemcpyHostToDevice);
+        bfs_kerenel<<<1, BLK_SIZE>>>(d_nodes, d_edgesArr, d_frontierArr, d_visitedArr, d_costArr, d_frontierExists, numNodes, numEdges);
         cudaDeviceSynchronize();
 
-        cudaMemcpy(h_frontierArr, d_frontierArr, BOOLS_SIZE, cudaMemcpyDeviceToHost);
+        cudaMemcpy(&h_frontierExists, d_frontierExists, sizeof(bool), cudaMemcpyDeviceToHost);
     }
     cudaMemcpy(h_costArr, d_costArr, NODES_SIZE, cudaMemcpyDeviceToHost);
 
@@ -88,4 +101,5 @@ int main()
     cudaFree(d_frontierArr);
     cudaFree(d_visitedArr);
     cudaFree(d_costArr);
+    cudaFree(d_frontierExists);
 }
